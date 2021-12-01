@@ -63,27 +63,3 @@ class CryptoExchange():
         self.has = DefaultMunch(None).fromDict(self.exchange_class.has)
         self.timeframes = self.exchange_class.timeframes
         self.exchange_class.enableRateLimit = True
-
-class OHLCVException(Exception):
-    pass
-
-class OHLCV():
-    def __init__(self, exchange_id: str = DEFAULT_EXCHANGE_ID,
-                 pair: str = DEFAULT_PAIR,
-                 timeframe: str = DEFAULT_TIMEFRAME):
-        self.exchange_id = exchange_id
-        self.pair = pair
-        self.timeframe = timeframe
-        self.exchange = CryptoExchange(exchange_id=exchange_id)
-        if self.exchange is None:
-            raise OBLCVException(f"{exchange_id} is not a valid exchange")
-        if not self.exchange.has.fetchOHLCV:
-            raise OHLCVException(f"Exchange {exchange_id} does not support OHLCV call")
-        if pair not in self.exchange.symbols:
-            raise OHLCVException(f"Exchange {exchange_id} does not support {pair} trading pair")
-
-    def fetch(self, timeframe=None, since=None, limit=None, params={}):
-        if timeframe is None:
-            timeframe = self.timeframe
-
-        return self.exchange.exchange_class.fetchOHLCV(self.pair, timeframe='1m', since=None, limit=None, params={})
