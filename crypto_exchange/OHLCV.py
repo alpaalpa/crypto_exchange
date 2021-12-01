@@ -3,14 +3,17 @@
 from logging import getLogger
 
 from munch import DefaultMunch
+import pandas as pd
 
 from .CryptoExchange import CryptoExchange, DEFAULT_EXCHANGE_ID
+from util.timefunc import ms2str
 
 logger = getLogger(__name__)
 
 DEFAULT_TIMEFRAME = '4h'
 DEFAULT_PAIR = 'BTC/USD'
 BTC_USD_PAIRS = ['BTC/USD', 'BTC/USDT', 'BTC/USDC', 'BTC/GUSD']
+DEFAULT_LIMIT = 100
 
 class OHLCVException(Exception):
     pass
@@ -34,4 +37,26 @@ class OHLCV():
         if timeframe is None:
             timeframe = self.timeframe
 
-        return self.exchange.exchange_class.fetchOHLCV(self.pair, timeframe='1m', since=None, limit=None, params={})
+        print(f"{since=}")
+        print(f"{limit=}")
+
+        all_results = []
+        done = False
+        last_since = since
+        while not done:
+            results = self.exchange.exchange_class.fetchOHLCV(self.pair, timeframe=self.timeframe,
+                                                              since=last_since, limit=None, params={})
+            num_fetched = len(results)
+            print(f"fetched: {num_fetched}")
+            if num_fetched > 1:
+                last_since = results[-1][0]
+                print(f"Last since = {ms2str(last_since)}")
+                all_results.extend(results)
+            else:
+                done = True
+
+        df = pd.DataFrame(all_results, columns=['timestamp', 'open', 'high', 'low', 'close', 'volumne'])
+        df['datetime'] = pd.to_datetime(df.timestamp, unit='ms')
+
+        return df
+
