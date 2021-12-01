@@ -127,3 +127,33 @@ def get_begin_next(ts: int = now_ms(), timeframe=DEFAULT_TIMEFRAME):
     logger.debug(ms2str(next_ts, local=True))
 
     return begin_ts, next_ts
+
+
+def num_entries(begin_ms: int = None, next_ms: int = None, timeframe: str = '4h'):
+    ''' Calculate the number of entries from a begin timestamp (inclusive in ms)
+    and up to but not including a next time timestamp (in ms) for a particular
+    timeframe ('1m', '5m', '15m', '1h')
+
+    Parameters
+    ----------
+    begin_ms: int
+        Begin timestamp (in ms)
+    next_ms: int
+        Timestamp of the beginning of the next timeframe interval
+    timeframe: str
+
+    Returns
+    -------
+    int
+        Number of expected entries (exchange might not have all entries)
+
+        None if invalid
+    '''
+    if not timeframe in TIMEFRAMES:
+        logger.error(f"{timeframe} is not a valid timeframe")
+        return None
+    if begin_ts > next_ms:
+        logger.error(f"Begin timestamp must be less than next timestamp")
+        return None
+
+    return None
