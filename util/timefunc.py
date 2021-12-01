@@ -3,10 +3,12 @@ from datetime import datetime, timezone, timedelta
 from logging import getLogger
 import time
 
-logger = getLogger(__name__)
+logger = getLogger('timefunc')
 
 # library for time stamp related functions.
 LOCAL_TIMEZONE = datetime.now(timezone.utc).astimezone().tzinfo
+EARLIEST_DT = datetime(2010, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+EARLIEST_MS = int(EARLIEST_DT.timestamp() * 1000)
 
 # Supported timeframes name and their equivalent in seconds
 TIMEFRAMES = {
@@ -138,8 +140,10 @@ def num_entries(begin_ms: int = None, next_ms: int = None, timeframe: str = '4h'
     ----------
     begin_ms: int
         Begin timestamp (in ms)
+        if None, then set to EARLIST_MS
     next_ms: int
         Timestamp of the beginning of the next timeframe interval
+        if None, then set to now
     timeframe: str
 
     Returns
@@ -149,11 +153,18 @@ def num_entries(begin_ms: int = None, next_ms: int = None, timeframe: str = '4h'
 
         None if invalid
     '''
-    if not timeframe in TIMEFRAMES:
+    if timeframe not in TIMEFRAMES:
         logger.error(f"{timeframe} is not a valid timeframe")
         return None
-    if begin_ts > next_ms:
-        logger.error(f"Begin timestamp must be less than next timestamp")
+    if begin_ms is None:
+        begin_ms = EARLIEST_MS
+    if next_ms is None:
+        next_ms = now_ms()
+    if begin_ms > next_ms:
+        logger.error("Begin timestamp must be less than next timestamp")
         return None
 
-    return None
+    begin_ts = int(begin_ms / 1000)
+    next_ts = int(next_ms / 1000)
+
+    return int((next_ts - begin_ts) / TIMEFRAMES[timeframe])
